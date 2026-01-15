@@ -1,37 +1,9 @@
 import { ProductCard } from "@/components/ui/ProductCard";
+import { getProducts } from "@/lib/api";
 
-// Mock Data for now
-const MOCK_PRODUCTS = [
-  {
-    id: "1",
-    slug: "galaxy-projector",
-    name: "Astronaut Galaxy Projector 2.0",
-    price: 29.99,
-    image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&q=80",
-    trendScore: 98,
-    soldCount: 142,
-  },
-  {
-    id: "2",
-    slug: "neck-fan",
-    name: "Portable Bladeless Neck Fan",
-    price: 19.99,
-    image: "https://images.unsplash.com/photo-1618360987523-288f986a438d?w=800&q=80",
-    trendScore: 94,
-    soldCount: 89,
-  },
-  {
-    id: "3",
-    slug: "cleaning-gel",
-    name: "Universal Dust Cleaning Gel",
-    price: 8.99,
-    image: "https://images.unsplash.com/photo-1581557991964-125469da3b8a?w=800&q=80",
-    trendScore: 88,
-    soldCount: 312,
-  },
-];
+export default async function Home() {
+  const products = await getProducts();
 
-export default function Home() {
   return (
     <div className="pb-20">
       {/* Header */}
@@ -49,11 +21,29 @@ export default function Home() {
           <span className="text-xs text-tiktok-cyan font-medium">Updates every 1h</span>
         </div>
 
-        <div className="grid grid-cols-1 gap-6">
-          {MOCK_PRODUCTS.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {products.length === 0 ? (
+          <div className="text-center py-20 text-gray-500">
+            <p>Loading trends...</p>
+            <p className="text-xs mt-2">(Ensure Engine is running & seeded)</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={{
+                  id: product.id.toString(),
+                  slug: product.slug,
+                  name: product.name,
+                  price: product.price_cents / 100,
+                  image: product.main_image_url || "",
+                  trendScore: Math.round(product.trend_score),
+                  soldCount: Math.round(product.urgency_score * 1.5) // Fake sold count based on urgency
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

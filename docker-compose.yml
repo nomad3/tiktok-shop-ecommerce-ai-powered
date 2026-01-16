@@ -4,7 +4,7 @@ services:
   web:
     build:
       context: ./web
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     ports:
       - "3000:3000"
     environment:
@@ -13,7 +13,7 @@ services:
       - engine
     volumes:
       - ./web:/app
-      - /app/node_modules
+      - web_node_modules:/app/node_modules
       - /app/.next
 
   engine:
@@ -44,3 +44,4 @@ services:
 
 volumes:
   postgres_data:
+  web_node_modules:

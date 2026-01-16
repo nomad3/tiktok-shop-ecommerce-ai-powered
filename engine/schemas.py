@@ -26,3 +26,11 @@ class OrderCreate(BaseModel):
     product_id: int
     email: str
     amount_cents: int
+
+class CheckoutSessionRequest(BaseModel):
+    product_id: int
+    quantity: int = 1
+
+class CheckoutSessionResponse(BaseModel):
+    checkout_url: str
+    session_id: str

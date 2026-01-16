@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, ForeignKe
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
-from .database import Base
+from database import Base
 
 class ProductStatus(str, enum.Enum):
     TESTING = "testing"

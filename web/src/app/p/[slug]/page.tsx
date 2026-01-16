@@ -1,3 +1,5 @@
+
+import { BuyButton } from "@/components/ui/BuyButton";
 import { getProduct } from "@/lib/api";
 import { ArrowLeft, ShieldCheck, Star, Truck, Zap } from "lucide-react";
 import Image from "next/image";
@@ -90,11 +92,11 @@ export default async function ProductPage({ params }: { params: { slug: string }
         </div>
       </div>
 
+
+
       {/* Sticky Footer */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-tiktok-black/90 backdrop-blur-lg border-t border-white/10 max-w-md mx-auto z-20">
-        <button className="w-full bg-tiktok-red hover:bg-red-600 text-white font-bold py-4 rounded-full text-lg shadow-lg shadow-tiktok-red/20 transition-all active:scale-95 flex items-center justify-center gap-2">
-          Buy Now - ${price}
-        </button>
+        <BuyButton productId={product.id} price={price} />
       </div>
     </div>
   );

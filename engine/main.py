@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from . import crud, models, schemas
-from .database import SessionLocal, engine
+import crud, models, schemas
+from database import SessionLocal, engine
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
@@ -80,3 +80,18 @@ def seed_db(db: Session = Depends(get_db)):
         created.append(crud.create_product(db, p))
 
     return {"message": "Seeded", "count": len(created)}
+
+@app.post("/create-checkout-session", response_model=schemas.CheckoutSessionResponse)
+def create_checkout_session(request: schemas.CheckoutSessionRequest, db: Session = Depends(get_db)):
+    product = crud.get_product(db, request.product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    import stripe_service
+    session = stripe_service.create_checkout_session(
+        product_name=product.name,
+        price_cents=product.price_cents,
+        product_slug=product.slug
+    )
+
+    return {"checkout_url": session.url, "session_id": session.id}

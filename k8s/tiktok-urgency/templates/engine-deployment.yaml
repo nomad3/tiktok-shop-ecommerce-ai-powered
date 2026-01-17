@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-engine
+  labels:
+    app: {{ .Release.Name }}-engine
+spec:
+  replicas: {{ .Values.engine.replicas | default 2 }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-engine
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-engine
+    spec:
+      containers:
+        - name: engine
+          image: "{{ .Values.engine.image.repository }}:{{ .Values.engine.image.tag }}"
+          imagePullPolicy: {{ .Values.engine.image.pullPolicy }}
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: database-url
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: stripe-secret-key
+            - name: STRIPE_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: stripe-webhook-secret
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: anthropic-api-key
+            - name: RAPIDAPI_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: rapidapi-key
+            - name: RAPIDAPI_HOST
+              value: "{{ .Values.engine.env.rapidapiHost | default "tiktok-scraper2.p.rapidapi.com" }}"
+            - name: FRONTEND_URL
+              value: "{{ .Values.ingress.host | default "http://localhost:3000" }}"
+          resources:
+            {{- toYaml .Values.engine.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5

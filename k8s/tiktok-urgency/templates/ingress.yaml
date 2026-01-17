@@ -1,0 +1,78 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-ingress
+  annotations:
+    {{- if .Values.ingress.tls.enabled }}
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.tls.clusterIssuer | default "letsencrypt-prod" }}
+    {{- end }}
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className | default "nginx" }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Release.Name }}-tls
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          # API routes go to engine
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-engine
+                port:
+                  number: 8000
+          - path: /webhooks
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-engine
+                port:
+                  number: 8000
+          - path: /products
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-engine
+                port:
+                  number: 8000
+          - path: /trends
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-engine
+                port:
+                  number: 8000
+          - path: /create-checkout-session
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-engine
+                port:
+                  number: 8000
+          - path: /seed
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-engine
+                port:
+                  number: 8000
+          # Everything else goes to web frontend
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-web
+                port:
+                  number: 3000
+{{- end }}

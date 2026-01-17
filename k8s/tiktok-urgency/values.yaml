@@ -1,6 +1,7 @@
-# Default values for tiktok-urgency.
+# Default values for tiktok-urgency
 
 web:
+  replicas: 2
   image:
     repository: tiktok-urgency-web
     pullPolicy: IfNotPresent
@@ -8,6 +9,8 @@ web:
   service:
     type: ClusterIP
     port: 3000
+  env:
+    apiUrl: "http://tiktok-urgency-engine:8000"
   resources:
     limits:
       cpu: 500m
@@ -17,6 +20,7 @@ web:
       memory: 128Mi
 
 engine:
+  replicas: 2
   image:
     repository: tiktok-urgency-engine
     pullPolicy: IfNotPresent
@@ -25,7 +29,7 @@ engine:
     type: ClusterIP
     port: 8000
   env:
-    openAiApiKey: "" # Set via secrets in real prod
+    rapidapiHost: "tiktok-scraper2.p.rapidapi.com"
   resources:
     limits:
       cpu: 500m
@@ -44,5 +48,23 @@ postgres:
     password: password
     database: tiktok_urgency
   persistence:
-    enabled: false # For dev simplicity
+    enabled: false
     size: 1Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  host: ""  # Set this to your domain
+  annotations: {}
+  tls:
+    enabled: true
+    clusterIssuer: letsencrypt-prod
+
+# Secrets - Override these at deploy time
+# Example: helm install tiktok ./k8s/tiktok-urgency --set secrets.stripeSecretKey=sk_live_xxx
+secrets:
+  databaseUrl: ""  # Will default to internal postgres if empty
+  stripeSecretKey: ""
+  stripeWebhookSecret: ""
+  anthropicApiKey: ""
+  rapidapiKey: ""

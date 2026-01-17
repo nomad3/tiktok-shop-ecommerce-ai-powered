@@ -1,0 +1,32 @@
+🚀 TikTok Urgency Shelf has been deployed!
+
+{{- if .Values.ingress.enabled }}
+Your application is available at:
+  https://{{ .Values.ingress.host }}
+{{- else }}
+To access your application, run:
+  kubectl port-forward svc/{{ .Release.Name }}-web 3000:3000
+
+Then visit: http://localhost:3000
+{{- end }}
+
+API Endpoints:
+  - GET  /products       - List trending products
+  - POST /trends/ingest  - Trigger trend ingestion
+  - POST /webhooks/stripe - Stripe webhook endpoint
+
+To seed demo data:
+  curl -X POST http://{{ .Values.ingress.host }}/seed
+
+Required Secrets (set via --set or values file):
+  - secrets.stripeSecretKey
+  - secrets.stripeWebhookSecret
+  - secrets.anthropicApiKey
+  - secrets.rapidapiKey
+
+{{- if not .Values.secrets.stripeSecretKey }}
+⚠️  WARNING: Stripe secret key not configured
+{{- end }}
+{{- if not .Values.secrets.anthropicApiKey }}
+⚠️  WARNING: Anthropic API key not configured (AI scoring will use heuristics)
+{{- end }}

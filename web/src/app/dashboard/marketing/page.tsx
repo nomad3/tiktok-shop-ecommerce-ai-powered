@@ -15,7 +15,9 @@ import {
   Sparkles,
   ChevronDown,
   ChevronRight,
+  ArrowRight,
 } from "lucide-react";
+import Link from "next/link";
 import clsx from "clsx";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -156,6 +158,49 @@ export default function MarketingPage() {
         <p className="text-gray-400">
           AI-powered content generation for your marketing campaigns.
         </p>
+      </div>
+
+      {/* Quick Links */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Link
+          href="/dashboard/marketing/social"
+          className="group bg-gradient-to-br from-tiktok-red/20 to-tiktok-cyan/20 rounded-xl border border-tiktok-red/30 p-5 hover:border-tiktok-cyan/50 transition-colors"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-tiktok-red to-tiktok-cyan rounded-xl flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-semibold">Social Content Generator</h3>
+                <p className="text-gray-400 text-sm">Generate content for all platforms at once</p>
+              </div>
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-tiktok-cyan group-hover:translate-x-1 transition-all" />
+          </div>
+          <div className="flex gap-2 mt-4">
+            <span className="px-2 py-1 bg-pink-500/20 text-pink-300 rounded text-xs">Instagram</span>
+            <span className="px-2 py-1 bg-black text-tiktok-cyan rounded text-xs border border-tiktok-gray">TikTok</span>
+            <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded text-xs">Facebook</span>
+            <span className="px-2 py-1 bg-sky-500/20 text-sky-300 rounded text-xs">Twitter</span>
+            <span className="px-2 py-1 bg-red-500/20 text-red-300 rounded text-xs">Pinterest</span>
+          </div>
+        </Link>
+
+        <div className="bg-tiktok-dark rounded-xl border border-tiktok-gray p-5 opacity-60">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-tiktok-gray rounded-xl flex items-center justify-center">
+                <FileText className="w-6 h-6 text-gray-400" />
+              </div>
+              <div>
+                <h3 className="text-white font-semibold">Content Calendar</h3>
+                <p className="text-gray-400 text-sm">Schedule and manage your posts</p>
+              </div>
+            </div>
+            <span className="px-2 py-1 bg-tiktok-gray text-gray-400 rounded text-xs">Coming Soon</span>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

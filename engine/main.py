@@ -9,6 +9,8 @@ from webhooks import router as webhooks_router
 from admin import router as admin_router
 from analytics import router as analytics_router
 from settings import router as settings_router, StoreSettings
+from trends import router as trends_router
+from ai_content import router as ai_content_router
 from services.tiktok_service import tiktok_service
 from services.ai_service import ai_service
 
@@ -34,6 +36,8 @@ app.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
 app.include_router(admin_router, prefix="/admin", tags=["admin"])
 app.include_router(analytics_router, prefix="/analytics", tags=["analytics"])
 app.include_router(settings_router, prefix="/settings", tags=["settings"])
+app.include_router(trends_router)  # Has its own /api/trends prefix
+app.include_router(ai_content_router)  # Has its own /api/ai prefix
 
 # Dependency
 def get_db():

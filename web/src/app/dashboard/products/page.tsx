@@ -13,8 +13,11 @@ import {
   EyeOff,
   ExternalLink,
   X,
+  Sparkles,
+  ChevronDown,
 } from "lucide-react";
 import clsx from "clsx";
+import { AIContentGenerator } from "@/components/dashboard/AIContentGenerator";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -360,6 +363,7 @@ function ProductModal({
     supplier_name: product?.supplier_name || "",
     supplier_cost_cents: product?.supplier_cost_cents || 0,
   });
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
 
   const margin = calculateMargin(formData.price_cents, formData.supplier_cost_cents);
 
@@ -571,6 +575,52 @@ function ProductModal({
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* AI Content Generator Section */}
+            <div className="border-t border-tiktok-gray pt-4 mt-4">
+              <button
+                type="button"
+                onClick={() => setShowAIGenerator(!showAIGenerator)}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-tiktok-cyan to-tiktok-red flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-white">AI Content Generator</h3>
+                    <p className="text-xs text-gray-400">Generate descriptions, ad copy & pricing</p>
+                  </div>
+                </div>
+                <ChevronDown
+                  className={clsx(
+                    "w-5 h-5 text-gray-400 transition-transform",
+                    showAIGenerator && "rotate-180"
+                  )}
+                />
+              </button>
+
+              {showAIGenerator && formData.name && (
+                <div className="mt-4">
+                  <AIContentGenerator
+                    productName={formData.name}
+                    supplierCostCents={formData.supplier_cost_cents || undefined}
+                    onDescriptionGenerated={(desc) =>
+                      setFormData({ ...formData, description: desc })
+                    }
+                    onPricingGenerated={(price) =>
+                      setFormData({ ...formData, price_cents: price })
+                    }
+                  />
+                </div>
+              )}
+
+              {showAIGenerator && !formData.name && (
+                <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-400 text-sm">
+                  Please enter a product name first to use the AI generator.
+                </div>
+              )}
             </div>
           </div>
 

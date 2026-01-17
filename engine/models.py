@@ -127,3 +127,55 @@ class ProductView(Base):
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     session_id = Column(String, nullable=True)  # For unique visitor tracking
     viewed_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class TrendVelocity(str, enum.Enum):
+    RISING = "rising"
+    STABLE = "stable"
+    DECLINING = "declining"
+
+
+class AIRecommendation(str, enum.Enum):
+    IMPORT = "import"
+    WATCH = "watch"
+    SKIP = "skip"
+
+
+class TrendProduct(Base):
+    """Products discovered from trend analysis - ready for import."""
+    __tablename__ = "trend_products"
+
+    id = Column(Integer, primary_key=True, index=True)
+    external_id = Column(String(100), unique=True, index=True, nullable=False)
+    title = Column(String(500), nullable=False)
+    description = Column(Text, nullable=True)
+    image_url = Column(Text, nullable=True)
+    video_url = Column(Text, nullable=True)
+
+    # Source & Category
+    source = Column(String(50), nullable=False)  # 'tiktok', 'instagram', 'aliexpress'
+    category = Column(String(100), nullable=True)
+
+    # Trend Metrics
+    trend_score = Column(Float, default=0.0)
+    trend_velocity = Column(String(20), default=TrendVelocity.STABLE)
+    view_count = Column(Integer, default=0)
+    like_count = Column(Integer, default=0)
+
+    # Pricing
+    supplier_url = Column(Text, nullable=True)
+    supplier_price_cents = Column(Integer, nullable=True)
+    suggested_price_cents = Column(Integer, nullable=True)
+    estimated_margin = Column(Float, nullable=True)
+
+    # AI Analysis
+    ai_recommendation = Column(String(20), nullable=True)  # 'import', 'watch', 'skip'
+    ai_reasoning = Column(Text, nullable=True)
+
+    # Import Status
+    is_imported = Column(Boolean, default=False)
+    imported_product_id = Column(Integer, ForeignKey("products.id"), nullable=True)
+
+    # Timestamps
+    discovered_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())

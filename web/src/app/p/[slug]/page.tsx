@@ -6,8 +6,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-export default async function ProductPage({ params }: { params: { slug: string } }) {
-  const product = await getProduct(params.slug);
+export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const product = await getProduct(slug);
 
   if (!product) {
     notFound();
@@ -18,7 +19,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   return (
     <div className="pb-24 bg-tiktok-black min-h-screen">
-      <ViewTracker slug={product.slug} />
+      <ViewTracker slug={slug} />
       {/* Nav */}
       <div className="fixed top-0 left-0 right-0 z-20 p-4 flex justify-between items-center max-w-md mx-auto">
         <Link href="/" className="bg-black/50 backdrop-blur-md p-2 rounded-full text-white hover:bg-black/70 transition">

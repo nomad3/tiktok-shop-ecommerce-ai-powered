@@ -414,7 +414,16 @@ export default function IntegrationsPage() {
                 {/* Connect Button */}
                 {!isConnecting && isAvailable && (
                   <button
-                    onClick={() => setConnectingPlatform(platform.id)}
+                    onClick={() => {
+                      // Navigate to dedicated connect page for Shopify/WooCommerce
+                      if (platform.id === "shopify") {
+                        router.push("/dashboard/integrations/shopify");
+                      } else if (platform.id === "woocommerce") {
+                        router.push("/dashboard/integrations/woocommerce");
+                      } else {
+                        setConnectingPlatform(platform.id);
+                      }
+                    }}
                     className="w-full py-2 bg-tiktok-gray/50 text-white rounded-lg text-sm font-medium hover:bg-tiktok-gray transition-colors"
                   >
                     Connect

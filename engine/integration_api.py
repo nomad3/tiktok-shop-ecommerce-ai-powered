@@ -2,17 +2,22 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import List, Optional
 from datetime import datetime
 import logging
+import re
 
 from database import get_db
 from models import Integration
 from services.shopify_service import create_shopify_service
 from services.woocommerce_service import create_woocommerce_service
+from services.encryption_service import encryption_service
 
 logger = logging.getLogger(__name__)
+
+# Credential fields that should be encrypted
+CREDENTIAL_FIELDS = ["api_key", "api_secret", "access_token"]
 
 router = APIRouter(prefix="/api/integrations", tags=["integrations"])
 
@@ -72,6 +77,17 @@ class PlatformInfo(BaseModel):
 class TestConnectionResponse(BaseModel):
     success: bool
     message: str
+
+
+# ============== Helper Functions ==============
+
+def get_decrypted_credentials(integration: Integration) -> dict:
+    """Decrypt integration credentials for use in API calls."""
+    return {
+        "api_key": encryption_service.decrypt(integration.api_key) if integration.api_key else None,
+        "api_secret": encryption_service.decrypt(integration.api_secret) if integration.api_secret else None,
+        "access_token": encryption_service.decrypt(integration.access_token) if integration.access_token else None,
+    }
 
 
 # ============== Platform Definitions ==============
@@ -171,14 +187,19 @@ async def connect_integration(
     if existing:
         raise HTTPException(status_code=400, detail="This store is already connected")
 
-    # Create integration
+    # Encrypt credentials before storing
+    encrypted_api_key = encryption_service.encrypt(request.api_key) if request.api_key else None
+    encrypted_api_secret = encryption_service.encrypt(request.api_secret) if request.api_secret else None
+    encrypted_access_token = encryption_service.encrypt(request.access_token) if request.access_token else None
+
+    # Create integration with encrypted credentials
     integration = Integration(
         platform=request.platform,
         name=request.name,
         store_url=request.store_url,
-        api_key=request.api_key,
-        api_secret=request.api_secret,
-        access_token=request.access_token,
+        api_key=encrypted_api_key,
+        api_secret=encrypted_api_secret,
+        access_token=encrypted_access_token,
         is_active=True,
         is_connected=False,
         sync_status="pending"
@@ -199,8 +220,11 @@ async def test_connection(integration_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Integration not found")
 
     try:
+        # Decrypt credentials for API calls
+        creds = get_decrypted_credentials(integration)
+
         if integration.platform == "shopify":
-            if not integration.access_token or not integration.store_url:
+            if not creds["access_token"] or not integration.store_url:
                 integration.is_connected = False
                 integration.sync_status = "error"
                 integration.sync_error = "Missing store URL or access token"
@@ -210,7 +234,7 @@ async def test_connection(integration_id: int, db: Session = Depends(get_db)):
                     message="Missing store URL or access token"
                 )
 
-            service = create_shopify_service(integration.store_url, integration.access_token)
+            service = create_shopify_service(integration.store_url, creds["access_token"])
             result = await service.test_connection()
 
             integration.is_connected = result.success
@@ -224,7 +248,7 @@ async def test_connection(integration_id: int, db: Session = Depends(get_db)):
             )
 
         elif integration.platform == "woocommerce":
-            if not integration.api_key or not integration.api_secret or not integration.store_url:
+            if not creds["api_key"] or not creds["api_secret"] or not integration.store_url:
                 integration.is_connected = False
                 integration.sync_status = "error"
                 integration.sync_error = "Missing store URL or API credentials"
@@ -236,8 +260,8 @@ async def test_connection(integration_id: int, db: Session = Depends(get_db)):
 
             service = create_woocommerce_service(
                 integration.store_url,
-                integration.api_key,
-                integration.api_secret
+                creds["api_key"],
+                creds["api_secret"]
             )
             result = await service.test_connection()
 
@@ -281,7 +305,11 @@ async def update_integration(
         raise HTTPException(status_code=404, detail="Integration not found")
 
     update_data = request.dict(exclude_unset=True)
+
+    # Encrypt credential fields if they are being updated
     for key, value in update_data.items():
+        if key in CREDENTIAL_FIELDS and value:
+            value = encryption_service.encrypt(value)
         setattr(integration, key, value)
 
     db.commit()
@@ -325,8 +353,11 @@ async def trigger_sync(
     orders_count = 0
 
     try:
+        # Decrypt credentials for API calls
+        creds = get_decrypted_credentials(integration)
+
         if integration.platform == "shopify":
-            service = create_shopify_service(integration.store_url, integration.access_token)
+            service = create_shopify_service(integration.store_url, creds["access_token"])
 
             if sync_type in ["all", "products"]:
                 products = await service.fetch_products(limit=100)
@@ -341,8 +372,8 @@ async def trigger_sync(
         elif integration.platform == "woocommerce":
             service = create_woocommerce_service(
                 integration.store_url,
-                integration.api_key,
-                integration.api_secret
+                creds["api_key"],
+                creds["api_secret"]
             )
 
             if sync_type in ["all", "products"]:
@@ -440,8 +471,11 @@ async def push_product(
         raise HTTPException(status_code=400, detail="Integration is not connected")
 
     try:
+        # Decrypt credentials for API calls
+        creds = get_decrypted_credentials(integration)
+
         if integration.platform == "shopify":
-            service = create_shopify_service(integration.store_url, integration.access_token)
+            service = create_shopify_service(integration.store_url, creds["access_token"])
             result = await service.create_product(
                 title=request.title,
                 description=request.description,
@@ -470,8 +504,8 @@ async def push_product(
         elif integration.platform == "woocommerce":
             service = create_woocommerce_service(
                 integration.store_url,
-                integration.api_key,
-                integration.api_secret
+                creds["api_key"],
+                creds["api_secret"]
             )
             result = await service.create_product(
                 name=request.title,
@@ -528,8 +562,11 @@ async def get_integration_products(
         raise HTTPException(status_code=400, detail="Integration is not connected")
 
     try:
+        # Decrypt credentials for API calls
+        creds = get_decrypted_credentials(integration)
+
         if integration.platform == "shopify":
-            service = create_shopify_service(integration.store_url, integration.access_token)
+            service = create_shopify_service(integration.store_url, creds["access_token"])
             products = await service.fetch_products(limit=limit)
             return {
                 "success": True,
@@ -549,8 +586,8 @@ async def get_integration_products(
         elif integration.platform == "woocommerce":
             service = create_woocommerce_service(
                 integration.store_url,
-                integration.api_key,
-                integration.api_secret
+                creds["api_key"],
+                creds["api_secret"]
             )
             products = await service.fetch_products(per_page=limit)
             return {
@@ -599,8 +636,11 @@ async def get_integration_orders(
         raise HTTPException(status_code=400, detail="Integration is not connected")
 
     try:
+        # Decrypt credentials for API calls
+        creds = get_decrypted_credentials(integration)
+
         if integration.platform == "shopify":
-            service = create_shopify_service(integration.store_url, integration.access_token)
+            service = create_shopify_service(integration.store_url, creds["access_token"])
             orders = await service.fetch_orders(limit=limit)
             return {
                 "success": True,
@@ -623,8 +663,8 @@ async def get_integration_orders(
         elif integration.platform == "woocommerce":
             service = create_woocommerce_service(
                 integration.store_url,
-                integration.api_key,
-                integration.api_secret
+                creds["api_key"],
+                creds["api_secret"]
             )
             orders = await service.fetch_orders(per_page=limit)
             return {

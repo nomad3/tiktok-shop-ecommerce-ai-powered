@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, ForeignKey, Text, Boolean
+from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, ForeignKey, Text, Boolean, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
@@ -12,6 +12,12 @@ class ProductStatus(str, enum.Enum):
 
 class Product(Base):
     __tablename__ = "products"
+    __table_args__ = (
+        Index('ix_products_status', 'status'),
+        Index('ix_products_trend_score', 'trend_score'),
+        Index('ix_products_created_at', 'created_at'),
+        Index('ix_products_status_trend', 'status', 'trend_score'),  # Composite for common queries
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     slug = Column(String, unique=True, index=True, nullable=False)
@@ -58,6 +64,12 @@ class TrendSignal(Base):
 
 class Order(Base):
     __tablename__ = "orders"
+    __table_args__ = (
+        Index('ix_orders_status', 'status'),
+        Index('ix_orders_created_at', 'created_at'),
+        Index('ix_orders_email', 'email'),
+        Index('ix_orders_status_created', 'status', 'created_at'),  # Composite for dashboard queries
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=True)
@@ -92,6 +104,11 @@ class SuggestionStatus(str, enum.Enum):
 class TrendSuggestion(Base):
     """AI-generated product suggestions from trend analysis."""
     __tablename__ = "trend_suggestions"
+    __table_args__ = (
+        Index('ix_trend_suggestions_status', 'status'),
+        Index('ix_trend_suggestions_trend_score', 'trend_score'),
+        Index('ix_trend_suggestions_created_at', 'created_at'),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     hashtag = Column(String, nullable=False)
@@ -144,6 +161,13 @@ class AIRecommendation(str, enum.Enum):
 class TrendProduct(Base):
     """Products discovered from trend analysis - ready for import."""
     __tablename__ = "trend_products"
+    __table_args__ = (
+        Index('ix_trend_products_source', 'source'),
+        Index('ix_trend_products_trend_score', 'trend_score'),
+        Index('ix_trend_products_is_imported', 'is_imported'),
+        Index('ix_trend_products_ai_recommendation', 'ai_recommendation'),
+        Index('ix_trend_products_discovered_at', 'discovered_at'),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     external_id = Column(String(100), unique=True, index=True, nullable=False)
@@ -192,6 +216,11 @@ class IntegrationPlatform(str, enum.Enum):
 class Integration(Base):
     """Store integrations with external e-commerce platforms."""
     __tablename__ = "integrations"
+    __table_args__ = (
+        Index('ix_integrations_platform', 'platform'),
+        Index('ix_integrations_is_active', 'is_active'),
+        Index('ix_integrations_sync_status', 'sync_status'),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     platform = Column(String(50), nullable=False)  # 'shopify', 'woocommerce', etc.
@@ -227,6 +256,11 @@ class Integration(Base):
 class ChatSession(Base):
     """Customer support chat sessions."""
     __tablename__ = "chat_sessions"
+    __table_args__ = (
+        Index('ix_chat_sessions_status', 'status'),
+        Index('ix_chat_sessions_customer_email', 'customer_email'),
+        Index('ix_chat_sessions_created_at', 'created_at'),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(String(100), unique=True, index=True)
@@ -267,6 +301,11 @@ class ChatMessage(Base):
 class Notification(Base):
     """User notifications."""
     __tablename__ = "notifications"
+    __table_args__ = (
+        Index('ix_notifications_user_is_read', 'user_id', 'is_read'),
+        Index('ix_notifications_user_created', 'user_id', 'created_at'),
+        Index('ix_notifications_priority', 'priority'),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String(100), index=True)  # User identifier

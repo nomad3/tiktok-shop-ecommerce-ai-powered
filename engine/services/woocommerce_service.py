@@ -426,6 +426,138 @@ class WooCommerceService:
             logger.error(f"Error fetching categories: {e}")
             return []
 
+    async def get_product(self, product_id: int) -> Optional[WooProduct]:
+        """
+        Get a single product by ID.
+
+        Args:
+            product_id: WooCommerce product ID
+
+        Returns:
+            WooProduct object or None if not found
+        """
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.base_url}/products/{product_id}",
+                    headers=self.headers,
+                    timeout=15.0
+                )
+
+                if response.status_code == 200:
+                    p = response.json()
+                    return WooProduct(
+                        id=p["id"],
+                        name=p.get("name", ""),
+                        description=p.get("description", ""),
+                        short_description=p.get("short_description", ""),
+                        sku=p.get("sku", ""),
+                        price=p.get("price", "0"),
+                        regular_price=p.get("regular_price", "0"),
+                        sale_price=p.get("sale_price", ""),
+                        status=p.get("status", ""),
+                        stock_status=p.get("stock_status", ""),
+                        stock_quantity=p.get("stock_quantity"),
+                        images=p.get("images", []),
+                        categories=p.get("categories", []),
+                        created_at=p.get("date_created", ""),
+                        updated_at=p.get("date_modified", "")
+                    )
+                return None
+        except Exception as e:
+            logger.error(f"Error fetching WooCommerce product: {e}")
+            return None
+
+    async def delete_product(self, product_id: int, force: bool = False) -> bool:
+        """
+        Delete a product from WooCommerce.
+
+        Args:
+            product_id: WooCommerce product ID
+            force: If True, permanently delete. If False, move to trash.
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.delete(
+                    f"{self.base_url}/products/{product_id}",
+                    headers=self.headers,
+                    params={"force": str(force).lower()},
+                    timeout=15.0
+                )
+                return response.status_code in (200, 202)
+        except Exception as e:
+            logger.error(f"Error deleting WooCommerce product: {e}")
+            return False
+
+    async def update_inventory(
+        self,
+        product_id: int,
+        quantity: int,
+        stock_status: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Update product inventory.
+
+        Args:
+            product_id: WooCommerce product ID
+            quantity: New stock quantity
+            stock_status: Stock status ('instock', 'outofstock', 'onbackorder')
+
+        Returns:
+            Updated product data or None if failed
+        """
+        updates = {
+            "manage_stock": True,
+            "stock_quantity": quantity
+        }
+
+        if stock_status:
+            updates["stock_status"] = stock_status
+        elif quantity <= 0:
+            updates["stock_status"] = "outofstock"
+        else:
+            updates["stock_status"] = "instock"
+
+        return await self.update_product(product_id, updates)
+
+    async def add_order_note(
+        self,
+        order_id: int,
+        note: str,
+        customer_note: bool = False
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Add a note to an order.
+
+        Args:
+            order_id: WooCommerce order ID
+            note: Note content
+            customer_note: If True, note is visible to customer
+
+        Returns:
+            Created note data or None if failed
+        """
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.base_url}/orders/{order_id}/notes",
+                    headers=self.headers,
+                    json={
+                        "note": note,
+                        "customer_note": customer_note
+                    },
+                    timeout=15.0
+                )
+                if response.status_code == 201:
+                    return response.json()
+                return None
+        except Exception as e:
+            logger.error(f"Error adding order note: {e}")
+            return None
+
     async def get_store_stats(self) -> Dict[str, Any]:
         """
         Get basic store statistics.

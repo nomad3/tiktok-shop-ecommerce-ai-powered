@@ -179,3 +179,46 @@ class TrendProduct(Base):
     # Timestamps
     discovered_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class IntegrationPlatform(str, enum.Enum):
+    SHOPIFY = "shopify"
+    WOOCOMMERCE = "woocommerce"
+    TIKTOK_SHOP = "tiktok_shop"
+    AMAZON = "amazon"
+    EBAY = "ebay"
+
+
+class Integration(Base):
+    """Store integrations with external e-commerce platforms."""
+    __tablename__ = "integrations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    platform = Column(String(50), nullable=False)  # 'shopify', 'woocommerce', etc.
+    name = Column(String(100))  # User-friendly name
+    store_url = Column(Text)
+
+    # Credentials (stored encrypted in production)
+    api_key = Column(Text, nullable=True)
+    api_secret = Column(Text, nullable=True)
+    access_token = Column(Text, nullable=True)
+
+    # Status
+    is_active = Column(Boolean, default=True)
+    is_connected = Column(Boolean, default=False)
+    last_sync_at = Column(DateTime(timezone=True), nullable=True)
+    sync_status = Column(String(20), default="pending")  # pending, syncing, synced, error
+    sync_error = Column(Text, nullable=True)
+
+    # Settings
+    auto_sync_products = Column(Boolean, default=True)
+    auto_sync_orders = Column(Boolean, default=True)
+    sync_interval_minutes = Column(Integer, default=30)
+
+    # Stats
+    products_synced = Column(Integer, default=0)
+    orders_synced = Column(Integer, default=0)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())

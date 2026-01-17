@@ -78,7 +78,7 @@ def seed_db(db: Session = Depends(get_db)):
             "name": "Portable Bladeless Neck Fan",
             "description": "Stay cool anywhere. Hands-free cooling for hot summer days.",
             "price_cents": 1999,
-            "main_image_url": "https://images.unsplash.com/photo-1618360987523-288f986a438d?w=800&q=80",
+            "main_image_url": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
             "trend_score": 92.0,
             "urgency_score": 88.0
         },

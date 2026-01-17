@@ -10,7 +10,9 @@ import {
   Users,
   ArrowUp,
   ArrowDown,
+  Brain,
 } from "lucide-react";
+import Link from "next/link";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { OrdersChart } from "@/components/dashboard/OrdersChart";
@@ -175,9 +177,18 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white mb-1">Analytics</h1>
-        <p className="text-gray-400">Track your store performance and insights.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white mb-1">Analytics</h1>
+          <p className="text-gray-400">Track your store performance and insights.</p>
+        </div>
+        <Link
+          href="/dashboard/analytics/insights"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-tiktok-cyan text-white rounded-lg font-medium hover:opacity-90"
+        >
+          <Brain className="w-5 h-5" />
+          AI Insights
+        </Link>
       </div>
 
       {/* Overview Stats */}

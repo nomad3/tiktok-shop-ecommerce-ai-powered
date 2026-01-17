@@ -14,6 +14,7 @@ from ai_content import router as ai_content_router
 from imports import router as imports_router
 from integration_api import router as integration_api_router
 from social_content import router as social_content_router
+from insights import router as insights_router
 from services.tiktok_service import tiktok_service
 from services.ai_service import ai_service
 
@@ -44,6 +45,7 @@ app.include_router(ai_content_router)  # Has its own /api/ai prefix
 app.include_router(imports_router)  # Has its own /api/import prefix
 app.include_router(integration_api_router)  # Has its own /api/integrations prefix
 app.include_router(social_content_router)  # Has its own /api/social prefix
+app.include_router(insights_router)  # Has its own /api/insights prefix
 
 # Dependency
 def get_db():

@@ -4,6 +4,7 @@ pandas
 requests
 python-dotenv
 openai
+anthropic
 sqlalchemy
 psycopg2-binary
 stripe

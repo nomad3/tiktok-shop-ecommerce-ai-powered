@@ -1,13 +1,30 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
+import json
 import crud, models, schemas
 from database import SessionLocal, engine
+from webhooks import router as webhooks_router
+from services.tiktok_service import tiktok_service
+from services.ai_service import ai_service
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="TikTok Urgency Engine")
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include webhook router
+app.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
 
 # Dependency
 def get_db():
@@ -95,3 +112,84 @@ def create_checkout_session(request: schemas.CheckoutSessionRequest, db: Session
     )
 
     return {"checkout_url": session.url, "session_id": session.id}
+
+
+# ============ TREND INGESTION ENDPOINTS ============
+
+@app.post("/trends/ingest", response_model=schemas.IngestResponse)
+def ingest_trends(db: Session = Depends(get_db)):
+    """Fetch trending data from TikTok and score with AI."""
+    # Fetch trending hashtags from TikTok
+    trends = tiktok_service.fetch_trending_hashtags(count=20)
+
+    signals_stored = 0
+    products_created = 0
+
+    for trend in trends:
+        # Store as trend signal
+        signal_data = schemas.TrendSignalCreate(
+            source="tiktok",
+            metric="trending_hashtag",
+            value=trend.views,
+            raw_data=json.dumps(trend.raw_data),
+            product_id=None
+        )
+        crud.create_trend_signal(db, signal_data)
+        signals_stored += 1
+
+        # Score with AI
+        score_result = ai_service.score_trend(
+            hashtag=trend.hashtag,
+            views=trend.views,
+            growth_rate=trend.growth_rate,
+            engagement=trend.engagement,
+            video_count=trend.video_count
+        )
+
+        # If high potential, create a product candidate
+        if score_result.trend_score >= 70 and score_result.suggested_name:
+            # Check if product already exists
+            existing = crud.get_product_by_slug(db, trend.hashtag.lower().replace(" ", "-"))
+            if not existing:
+                product_data = schemas.ProductCreate(
+                    slug=trend.hashtag.lower().replace(" ", "-"),
+                    name=score_result.suggested_name or f"Trending: {trend.hashtag}",
+                    description=score_result.suggested_description or f"Viral product from #{trend.hashtag}",
+                    price_cents=1999,  # Default price, to be updated
+                    trend_score=score_result.trend_score,
+                    urgency_score=score_result.urgency_score
+                )
+                crud.create_product(db, product_data)
+                products_created += 1
+
+    return {
+        "trends_fetched": len(trends),
+        "products_created": products_created,
+        "signals_stored": signals_stored
+    }
+
+
+@app.get("/trends/signals", response_model=List[schemas.TrendSignal])
+def get_trend_signals(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
+    """Get stored trend signals."""
+    return crud.get_trend_signals(db, skip=skip, limit=limit)
+
+
+@app.post("/trends/score", response_model=schemas.ScoringResponse)
+def score_trend(request: schemas.ScoringRequest):
+    """Score a single trend using AI."""
+    result = ai_service.score_trend(
+        hashtag=request.hashtag,
+        views=request.views,
+        growth_rate=request.growth_rate,
+        engagement=request.engagement,
+        video_count=request.video_count
+    )
+
+    return {
+        "trend_score": result.trend_score,
+        "urgency_score": result.urgency_score,
+        "reasoning": result.reasoning,
+        "suggested_name": result.suggested_name,
+        "suggested_description": result.suggested_description
+    }

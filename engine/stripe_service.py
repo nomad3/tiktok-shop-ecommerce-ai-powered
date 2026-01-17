@@ -24,6 +24,9 @@ def create_checkout_session(product_name: str, price_cents: int, product_slug: s
             mode='payment',
             success_url=f'{FRONTEND_URL}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}',
             cancel_url=f'{FRONTEND_URL}/p/{product_slug}',
+            metadata={
+                'product_slug': product_slug
+            }
         )
         return session
     except Exception as e:

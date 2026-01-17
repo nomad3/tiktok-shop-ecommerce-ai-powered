@@ -1,5 +1,5 @@
-
 import { BuyButton } from "@/components/ui/BuyButton";
+import { ViewTracker } from "@/components/ui/ViewTracker";
 import { getProduct } from "@/lib/api";
 import { ArrowLeft, ShieldCheck, Star, Truck, Zap } from "lucide-react";
 import Image from "next/image";
@@ -18,6 +18,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   return (
     <div className="pb-24 bg-tiktok-black min-h-screen">
+      <ViewTracker slug={product.slug} />
       {/* Nav */}
       <div className="fixed top-0 left-0 right-0 z-20 p-4 flex justify-between items-center max-w-md mx-auto">
         <Link href="/" className="bg-black/50 backdrop-blur-md p-2 rounded-full text-white hover:bg-black/70 transition">

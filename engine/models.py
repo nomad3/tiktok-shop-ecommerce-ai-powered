@@ -51,7 +51,7 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=True)
 
     email = Column(String, nullable=False)
     amount_cents = Column(Integer, nullable=False)
@@ -59,3 +59,52 @@ class Order(Base):
     stripe_session_id = Column(String, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationship
+    product = relationship("Product", backref="orders")
+
+
+class SuggestionStatus(str, enum.Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+class TrendSuggestion(Base):
+    """AI-generated product suggestions from trend analysis."""
+    __tablename__ = "trend_suggestions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    hashtag = Column(String, nullable=False)
+    views = Column(Integer, default=0)
+    growth_rate = Column(Float, default=0.0)
+    engagement = Column(Integer, default=0)
+    video_count = Column(Integer, default=0)
+
+    # AI Scores
+    trend_score = Column(Float, default=0.0)
+    urgency_score = Column(Float, default=0.0)
+    ai_reasoning = Column(Text, nullable=True)
+
+    # AI Suggestions
+    suggested_name = Column(String, nullable=True)
+    suggested_description = Column(Text, nullable=True)
+    suggested_price_cents = Column(Integer, nullable=True)
+
+    # Status
+    status = Column(String, default=SuggestionStatus.PENDING)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Link to created product (if approved)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=True)
+
+
+class ProductView(Base):
+    """Track product page views for conversion analytics."""
+    __tablename__ = "product_views"
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    session_id = Column(String, nullable=True)  # For unique visitor tracking
+    viewed_at = Column(DateTime(timezone=True), server_default=func.now())

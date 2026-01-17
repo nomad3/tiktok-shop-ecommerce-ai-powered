@@ -6,6 +6,7 @@ import json
 import crud, models, schemas
 from database import SessionLocal, engine
 from webhooks import router as webhooks_router
+from admin import router as admin_router
 from services.tiktok_service import tiktok_service
 from services.ai_service import ai_service
 
@@ -23,8 +24,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include webhook router
+# Include routers
 app.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
+app.include_router(admin_router, prefix="/admin", tags=["admin"])
 
 # Dependency
 def get_db():
@@ -118,7 +120,7 @@ def create_checkout_session(request: schemas.CheckoutSessionRequest, db: Session
 
 @app.post("/trends/ingest", response_model=schemas.IngestResponse)
 def ingest_trends(db: Session = Depends(get_db)):
-    """Fetch trending data from TikTok and score with AI."""
+    """Fetch trending data from TikTok and score with AI. Creates suggestions for admin review."""
     # Fetch trending hashtags from TikTok
     try:
         trends = tiktok_service.fetch_trending_hashtags(count=20)
@@ -126,7 +128,7 @@ def ingest_trends(db: Session = Depends(get_db)):
         raise HTTPException(status_code=503, detail=str(e))
 
     signals_stored = 0
-    products_created = 0
+    suggestions_created = 0
 
     for trend in trends:
         # Store as trend signal
@@ -149,25 +151,36 @@ def ingest_trends(db: Session = Depends(get_db)):
             video_count=trend.video_count
         )
 
-        # If high potential, create a product candidate
-        if score_result.trend_score >= 70 and score_result.suggested_name:
-            # Check if product already exists
-            existing = crud.get_product_by_slug(db, trend.hashtag.lower().replace(" ", "-"))
+        # If high potential, create a suggestion for admin review
+        if score_result.trend_score >= 50:
+            # Check if suggestion already exists
+            existing = db.query(models.TrendSuggestion).filter(
+                models.TrendSuggestion.hashtag == trend.hashtag,
+                models.TrendSuggestion.status == "pending"
+            ).first()
+
             if not existing:
-                product_data = schemas.ProductCreate(
-                    slug=trend.hashtag.lower().replace(" ", "-"),
-                    name=score_result.suggested_name or f"Trending: {trend.hashtag}",
-                    description=score_result.suggested_description or f"Viral product from #{trend.hashtag}",
-                    price_cents=1999,  # Default price, to be updated
+                suggestion = models.TrendSuggestion(
+                    hashtag=trend.hashtag,
+                    views=trend.views,
+                    growth_rate=trend.growth_rate,
+                    engagement=trend.engagement,
+                    video_count=trend.video_count,
                     trend_score=score_result.trend_score,
-                    urgency_score=score_result.urgency_score
+                    urgency_score=score_result.urgency_score,
+                    ai_reasoning=score_result.reasoning,
+                    suggested_name=score_result.suggested_name,
+                    suggested_description=score_result.suggested_description,
+                    suggested_price_cents=1999,  # Default price
+                    status="pending"
                 )
-                crud.create_product(db, product_data)
-                products_created += 1
+                db.add(suggestion)
+                db.commit()
+                suggestions_created += 1
 
     return {
         "trends_fetched": len(trends),
-        "products_created": products_created,
+        "products_created": suggestions_created,  # Actually suggestions now
         "signals_stored": signals_stored
     }
 

@@ -5,6 +5,8 @@ import { SessionProvider } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { MobileNav } from "@/components/dashboard/MobileNav";
+import MobileBottomNav from "@/components/dashboard/MobileBottomNav";
+import NotificationBell from "@/components/dashboard/NotificationBell";
 import clsx from "clsx";
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
@@ -58,14 +60,18 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <span className="font-bold text-white">Command Center</span>
+            <span className="font-bold text-white flex-1">Command Center</span>
+            <NotificationBell />
           </div>
         </div>
 
-        <div className="p-4 lg:p-8">
+        <div className="p-4 lg:p-8 pb-20 lg:pb-8">
           {children}
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }

@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  MessageCircle,
 } from "lucide-react";
 import { useState } from "react";
 import clsx from "clsx";
@@ -27,7 +28,8 @@ const navItems = [
   { href: "/dashboard/orders", label: "Orders", icon: ShoppingCart },
   { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone, badge: "AI" },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/dashboard/integrations", label: "Integrations", icon: Plug, disabled: true },
+  { href: "/dashboard/integrations", label: "Integrations", icon: Plug },
+  { href: "/dashboard/support", label: "Support", icon: MessageCircle, badge: "AI" },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
@@ -73,16 +75,13 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             return (
               <Link
                 key={item.href}
-                href={item.disabled ? "#" : item.href}
+                href={item.href}
                 className={clsx(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative",
                   isActive
                     ? "bg-tiktok-red/10 text-tiktok-red"
-                    : item.disabled
-                    ? "text-gray-600 cursor-not-allowed"
                     : "text-gray-400 hover:text-white hover:bg-tiktok-gray/50"
                 )}
-                onClick={(e) => item.disabled && e.preventDefault()}
               >
                 <item.icon className={clsx("w-5 h-5 flex-shrink-0", collapsed && "mx-auto")} />
                 {!collapsed && (
@@ -91,11 +90,6 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     {item.badge && (
                       <span className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-tiktok-cyan to-tiktok-red text-white rounded">
                         {item.badge}
-                      </span>
-                    )}
-                    {item.disabled && (
-                      <span className="px-1.5 py-0.5 text-[10px] font-medium bg-tiktok-gray text-gray-400 rounded">
-                        Soon
                       </span>
                     )}
                   </>

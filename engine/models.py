@@ -222,3 +222,64 @@ class Integration(Base):
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+class ChatSession(Base):
+    """Customer support chat sessions."""
+    __tablename__ = "chat_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(100), unique=True, index=True)
+    customer_email = Column(String(255), nullable=True)
+    customer_name = Column(String(255), nullable=True)
+
+    status = Column(String(20), default="active")  # active, pending_escalation, escalated, resolved
+    escalated_at = Column(DateTime(timezone=True), nullable=True)
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Associated ticket if escalated
+    ticket_id = Column(String(50), nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationship
+    messages = relationship("ChatMessage", back_populates="session")
+
+
+class ChatMessage(Base):
+    """Messages within a chat session."""
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("chat_sessions.id"))
+
+    role = Column(String(20))  # 'user', 'assistant', 'system'
+    content = Column(Text)
+    metadata_json = Column(Text, nullable=True)  # JSON for confidence, intent, etc.
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationship
+    session = relationship("ChatSession", back_populates="messages")
+
+
+class Notification(Base):
+    """User notifications."""
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(100), index=True)  # User identifier
+
+    type = Column(String(50))  # 'order', 'alert', 'system', 'insight'
+    title = Column(String(255))
+    message = Column(Text)
+    link = Column(Text, nullable=True)  # Optional link to related page
+
+    is_read = Column(Boolean, default=False)
+    read_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Priority: low, medium, high, urgent
+    priority = Column(String(20), default="medium")
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

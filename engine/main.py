@@ -7,11 +7,25 @@ import crud, models, schemas
 from database import SessionLocal, engine
 from webhooks import router as webhooks_router
 from admin import router as admin_router
+from analytics import router as analytics_router
+from settings import router as settings_router, StoreSettings
+from trends import router as trends_router
+from ai_content import router as ai_content_router
+from imports import router as imports_router
+from integration_api import router as integration_api_router
+from social_content import router as social_content_router
+from insights import router as insights_router
+from chatbot import router as chatbot_router
+from notifications import router as notifications_router
+from fulfillment import router as fulfillment_router
 from services.tiktok_service import tiktok_service
 from services.ai_service import ai_service
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
+# Create settings table separately (defined in settings.py)
+from database import Base as SettingsBase
+SettingsBase.metadata.create_all(bind=engine)
 
 app = FastAPI(title="TikTok Urgency Engine")
 
@@ -27,6 +41,17 @@ app.add_middleware(
 # Include routers
 app.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
 app.include_router(admin_router, prefix="/admin", tags=["admin"])
+app.include_router(analytics_router, prefix="/analytics", tags=["analytics"])
+app.include_router(settings_router, prefix="/settings", tags=["settings"])
+app.include_router(trends_router)  # Has its own /api/trends prefix
+app.include_router(ai_content_router)  # Has its own /api/ai prefix
+app.include_router(imports_router)  # Has its own /api/import prefix
+app.include_router(integration_api_router)  # Has its own /api/integrations prefix
+app.include_router(social_content_router)  # Has its own /api/social prefix
+app.include_router(insights_router)  # Has its own /api/insights prefix
+app.include_router(chatbot_router)  # Has its own /api/chatbot prefix
+app.include_router(notifications_router)  # Has its own /api/notifications prefix
+app.include_router(fulfillment_router)  # Has its own /api/fulfillment prefix
 
 # Dependency
 def get_db():

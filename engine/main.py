@@ -17,6 +17,7 @@ from social_content import router as social_content_router
 from insights import router as insights_router
 from chatbot import router as chatbot_router
 from notifications import router as notifications_router
+from fulfillment import router as fulfillment_router
 from services.tiktok_service import tiktok_service
 from services.ai_service import ai_service
 
@@ -50,6 +51,7 @@ app.include_router(social_content_router)  # Has its own /api/social prefix
 app.include_router(insights_router)  # Has its own /api/insights prefix
 app.include_router(chatbot_router)  # Has its own /api/chatbot prefix
 app.include_router(notifications_router)  # Has its own /api/notifications prefix
+app.include_router(fulfillment_router)  # Has its own /api/fulfillment prefix
 
 # Dependency
 def get_db():

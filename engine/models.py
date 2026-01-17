@@ -322,3 +322,114 @@ class Notification(Base):
     priority = Column(String(20), default="medium")
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class Supplier(Base):
+    """Supplier information for dropshipping."""
+    __tablename__ = "suppliers"
+    __table_args__ = (
+        Index('ix_suppliers_platform', 'platform'),
+        Index('ix_suppliers_auto_order', 'auto_order_enabled'),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    platform = Column(String(50), nullable=False)  # aliexpress, cj, printful, etc.
+
+    # Contact info
+    website_url = Column(Text, nullable=True)
+    contact_email = Column(String(255), nullable=True)
+
+    # API credentials (encrypted)
+    api_credentials_encrypted = Column(Text, nullable=True)
+
+    # Settings
+    auto_order_enabled = Column(Boolean, default=False)
+    max_order_value_cents = Column(Integer, default=10000)  # $100 default
+    default_shipping_method = Column(String(50), nullable=True)
+
+    # Reliability metrics
+    reliability_score = Column(Float, default=5.0)  # 1-10 scale
+    avg_shipping_days = Column(Float, nullable=True)
+    total_orders = Column(Integer, default=0)
+    successful_orders = Column(Integer, default=0)
+    failed_orders = Column(Integer, default=0)
+
+    # Status
+    is_active = Column(Boolean, default=True)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    product_links = relationship("ProductSupplier", back_populates="supplier")
+
+
+class ProductSupplier(Base):
+    """Link between products and their suppliers."""
+    __tablename__ = "product_suppliers"
+    __table_args__ = (
+        Index('ix_product_suppliers_product', 'product_id'),
+        Index('ix_product_suppliers_supplier', 'supplier_id'),
+        Index('ix_product_suppliers_primary', 'is_primary'),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
+
+    # Supplier product info
+    supplier_product_url = Column(Text, nullable=True)
+    supplier_sku = Column(String(100), nullable=True)
+    supplier_product_id = Column(String(100), nullable=True)
+
+    # Pricing
+    supplier_price_cents = Column(Integer, nullable=True)
+    shipping_cost_cents = Column(Integer, nullable=True)
+    total_cost_cents = Column(Integer, nullable=True)
+
+    # Stock
+    stock_quantity = Column(Integer, nullable=True)
+    is_available = Column(Boolean, default=True)
+
+    # Priority
+    is_primary = Column(Boolean, default=True)
+    priority = Column(Integer, default=1)
+
+    # Last sync
+    last_checked_at = Column(DateTime(timezone=True), nullable=True)
+    last_ordered_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    supplier = relationship("Supplier", back_populates="product_links")
+
+
+class FulfillmentRule(Base):
+    """Rules for automatic order fulfillment."""
+    __tablename__ = "fulfillment_rules"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+
+    # Condition type: order_value, product_status, customer_type, etc.
+    condition_type = Column(String(50), nullable=False)
+    condition_operator = Column(String(20), nullable=False)  # lt, gt, eq, contains
+    condition_value = Column(String(255), nullable=False)
+
+    # Action: auto_fulfill, hold_for_review, notify, reject
+    action = Column(String(50), nullable=False)
+    action_params = Column(Text, nullable=True)  # JSON for additional params
+
+    # Rule settings
+    priority = Column(Integer, default=1)
+    is_enabled = Column(Boolean, default=True)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())

@@ -120,7 +120,10 @@ def create_checkout_session(request: schemas.CheckoutSessionRequest, db: Session
 def ingest_trends(db: Session = Depends(get_db)):
     """Fetch trending data from TikTok and score with AI."""
     # Fetch trending hashtags from TikTok
-    trends = tiktok_service.fetch_trending_hashtags(count=20)
+    try:
+        trends = tiktok_service.fetch_trending_hashtags(count=20)
+    except ValueError as e:
+        raise HTTPException(status_code=503, detail=str(e))
 
     signals_stored = 0
     products_created = 0

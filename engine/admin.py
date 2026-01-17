@@ -231,3 +231,74 @@ def record_view(slug: str, session_id: str = None, db: Session = Depends(get_db)
     db.commit()
 
     return {"status": "recorded"}
+
+
+@router.get("/orders/{order_id}", response_model=schemas.Order)
+def get_order(order_id: int, db: Session = Depends(get_db)):
+    """Get a single order by ID."""
+    order = db.query(models.Order).filter(models.Order.id == order_id).first()
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    return {
+        "id": order.id,
+        "product_id": order.product_id,
+        "email": order.email,
+        "amount_cents": order.amount_cents,
+        "status": order.status,
+        "stripe_session_id": order.stripe_session_id,
+        "created_at": order.created_at,
+        "product_name": order.product.name if order.product else None,
+        "tracking_number": getattr(order, 'tracking_number', None),
+        "tracking_url": getattr(order, 'tracking_url', None),
+    }
+
+
+@router.patch("/orders/{order_id}/status")
+def update_order_status(
+    order_id: int,
+    update: schemas.OrderStatusUpdate,
+    db: Session = Depends(get_db)
+):
+    """Update order status."""
+    order = db.query(models.Order).filter(models.Order.id == order_id).first()
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    valid_statuses = ["pending", "paid", "processing", "shipped", "delivered", "fulfilled", "cancelled", "refunded", "abandoned"]
+    if update.status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+
+    order.status = update.status
+    db.commit()
+
+    return {"status": order.status, "id": order_id}
+
+
+@router.post("/orders/{order_id}/tracking")
+def add_order_tracking(
+    order_id: int,
+    tracking: schemas.OrderTrackingUpdate,
+    db: Session = Depends(get_db)
+):
+    """Add tracking information to an order."""
+    order = db.query(models.Order).filter(models.Order.id == order_id).first()
+
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    # Set tracking fields if they exist on the model
+    if hasattr(order, 'tracking_number'):
+        order.tracking_number = tracking.tracking_number
+    if hasattr(order, 'tracking_url') and tracking.tracking_url:
+        order.tracking_url = tracking.tracking_url
+
+    db.commit()
+
+    return {
+        "id": order_id,
+        "tracking_number": tracking.tracking_number,
+        "tracking_url": tracking.tracking_url
+    }

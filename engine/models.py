@@ -29,8 +29,17 @@ class Product(Base):
     trend_score = Column(Float, default=0.0)
     urgency_score = Column(Float, default=0.0)
 
-    # Metadata
+    # Supplier Information
+    supplier_url = Column(Text, nullable=True)
+    supplier_name = Column(String(100), nullable=True)
+    supplier_cost_cents = Column(Integer, nullable=True)
+    profit_margin = Column(Float, nullable=True)
+    import_source = Column(String(50), default="manual")  # 'tiktok', 'aliexpress', 'manual'
+
+    # Legacy field (kept for compatibility)
     supplier_info = Column(Text, nullable=True)
+
+    # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -57,6 +66,16 @@ class Order(Base):
     amount_cents = Column(Integer, nullable=False)
     status = Column(String, default="pending")
     stripe_session_id = Column(String, nullable=True)
+
+    # Fulfillment
+    tracking_number = Column(String(100), nullable=True)
+    tracking_url = Column(Text, nullable=True)
+    supplier_order_id = Column(String(100), nullable=True)
+    shipped_at = Column(DateTime(timezone=True), nullable=True)
+    delivered_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Shipping address (stored as JSON or simple text)
+    shipping_address = Column(Text, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

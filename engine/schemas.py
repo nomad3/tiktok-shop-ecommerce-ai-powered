@@ -10,6 +10,11 @@ class ProductBase(BaseModel):
     main_image_url: Optional[str] = None
     trend_score: float = 0.0
     urgency_score: float = 0.0
+    supplier_url: Optional[str] = None
+    supplier_name: Optional[str] = None
+    supplier_cost_cents: Optional[int] = None
+    profit_margin: Optional[float] = None
+    import_source: Optional[str] = "manual"
 
 class ProductCreate(ProductBase):
     pass
@@ -120,6 +125,11 @@ class ProductUpdate(BaseModel):
     price_cents: Optional[int] = None
     status: Optional[str] = None
     main_image_url: Optional[str] = None
+    supplier_url: Optional[str] = None
+    supplier_name: Optional[str] = None
+    supplier_cost_cents: Optional[int] = None
+    profit_margin: Optional[float] = None
+    import_source: Optional[str] = None
 
 
 class Order(BaseModel):
@@ -144,3 +154,12 @@ class AdminStats(BaseModel):
     pending_suggestions: int
     views_today: int
     conversion_rate: float
+
+
+class OrderStatusUpdate(BaseModel):
+    status: str
+
+
+class OrderTrackingUpdate(BaseModel):
+    tracking_number: str
+    tracking_url: Optional[str] = None

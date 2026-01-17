@@ -7,11 +7,16 @@ import crud, models, schemas
 from database import SessionLocal, engine
 from webhooks import router as webhooks_router
 from admin import router as admin_router
+from analytics import router as analytics_router
+from settings import router as settings_router, StoreSettings
 from services.tiktok_service import tiktok_service
 from services.ai_service import ai_service
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
+# Create settings table separately (defined in settings.py)
+from database import Base as SettingsBase
+SettingsBase.metadata.create_all(bind=engine)
 
 app = FastAPI(title="TikTok Urgency Engine")
 
@@ -27,6 +32,8 @@ app.add_middleware(
 # Include routers
 app.include_router(webhooks_router, prefix="/webhooks", tags=["webhooks"])
 app.include_router(admin_router, prefix="/admin", tags=["admin"])
+app.include_router(analytics_router, prefix="/analytics", tags=["analytics"])
+app.include_router(settings_router, prefix="/settings", tags=["settings"])
 
 # Dependency
 def get_db():

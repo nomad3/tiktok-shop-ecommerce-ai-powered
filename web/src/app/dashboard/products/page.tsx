@@ -15,9 +15,11 @@ import {
   X,
   Sparkles,
   ChevronDown,
+  Link,
 } from "lucide-react";
 import clsx from "clsx";
 import { AIContentGenerator } from "@/components/dashboard/AIContentGenerator";
+import { ImportProductModal } from "@/components/dashboard/ImportProductModal";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -67,6 +69,7 @@ function ProductsContent() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -161,13 +164,22 @@ function ProductsContent() {
           <h1 className="text-2xl font-bold text-white mb-1">Products</h1>
           <p className="text-gray-400">Manage your product catalog.</p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-tiktok-red text-white font-medium rounded-lg hover:bg-tiktok-red/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Product
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-tiktok-cyan text-black font-medium rounded-lg hover:bg-tiktok-cyan/90 transition-colors"
+          >
+            <Link className="w-4 h-4" />
+            Import URL
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-tiktok-red text-white font-medium rounded-lg hover:bg-tiktok-red/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Product
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -338,6 +350,36 @@ function ProductsContent() {
           onSave={createProduct}
         />
       )}
+
+      {/* Import Modal */}
+      <ImportProductModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImport={async (importedProduct) => {
+          // Create the product from imported data
+          try {
+            const res = await fetch(`${API_URL}/api/import/create-product`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                title: importedProduct.title,
+                description: importedProduct.description,
+                price_cents: importedProduct.price_cents,
+                supplier_cost_cents: importedProduct.supplier_cost_cents,
+                supplier_url: importedProduct.supplier_url,
+                supplier_name: importedProduct.supplier_name,
+                main_image_url: importedProduct.images[0] || null,
+              }),
+            });
+
+            if (res.ok) {
+              fetchProducts();
+            }
+          } catch (error) {
+            console.error("Failed to create imported product:", error);
+          }
+        }}
+      />
     </div>
   );
 }

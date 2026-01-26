@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Sparkles, ShoppingBag, Menu, X } from "lucide-react";
+import { Sparkles, ShoppingBag, Menu, X, LayoutDashboard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function Header() {
@@ -44,13 +44,22 @@ export function Header() {
           <Link href="#how-it-works" className="text-sm text-gray-300 hover:text-white transition-colors">
             How It Works
           </Link>
-          <Link href="#" className="text-sm text-gray-300 hover:text-white transition-colors">
-            About
+          <Link href="/dashboard" className="text-sm text-gray-300 hover:text-white transition-colors">
+            Sellers
           </Link>
         </nav>
 
         {/* Actions */}
         <div className="flex items-center gap-3">
+          {/* Seller Dashboard Button */}
+          <Link
+            href="/dashboard"
+            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-tiktok-cyan to-tiktok-red text-white text-sm font-semibold rounded-full hover:opacity-90 transition-opacity"
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            Dashboard
+          </Link>
+
           <button className="relative p-2 text-gray-300 hover:text-white transition-colors">
             <ShoppingBag className="w-5 h-5" />
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-tiktok-red rounded-full text-[10px] font-bold text-white flex items-center justify-center">
@@ -93,11 +102,12 @@ export function Header() {
                 How It Works
               </Link>
               <Link
-                href="#"
+                href="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-3 text-gray-300 hover:text-white transition-colors"
+                className="py-3 text-tiktok-cyan hover:text-white transition-colors flex items-center gap-2"
               >
-                About
+                <LayoutDashboard className="w-4 h-4" />
+                Seller Dashboard
               </Link>
             </nav>
           </motion.div>

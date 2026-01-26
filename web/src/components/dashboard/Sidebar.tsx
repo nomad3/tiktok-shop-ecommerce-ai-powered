@@ -24,6 +24,7 @@ import clsx from "clsx";
 const navItems = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/discover", label: "Discover", icon: Search, badge: "AI" },
+  { href: "/dashboard/queue", label: "AI Queue", icon: Sparkles, badge: "AI" },
   { href: "/dashboard/products", label: "Products", icon: Package },
   { href: "/dashboard/orders", label: "Orders", icon: ShoppingCart },
   { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone, badge: "AI" },

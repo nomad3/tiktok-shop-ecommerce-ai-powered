@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="bg-tiktok-dark border-t border-white/5">
       <div className="max-w-6xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
@@ -43,6 +43,33 @@ export function Footer() {
               <li>
                 <Link href="#" className="text-sm text-gray-400 hover:text-white transition-colors">
                   Best Sellers
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Sellers */}
+          <div>
+            <h4 className="font-semibold text-white mb-4">Sellers</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/dashboard" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Command Center
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard/discover" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Discover Trends
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard/products" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Manage Products
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard/analytics" className="text-sm text-gray-400 hover:text-white transition-colors">
+                  Analytics
                 </Link>
               </li>
             </ul>

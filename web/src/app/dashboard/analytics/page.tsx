@@ -17,6 +17,8 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { OrdersChart } from "@/components/dashboard/OrdersChart";
 import { TopProducts } from "@/components/dashboard/TopProducts";
+import { ConversionFunnel } from "@/components/dashboard/ConversionFunnel";
+import { TrendPerformance } from "@/components/dashboard/TrendPerformance";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -232,6 +234,12 @@ export default function AnalyticsPage() {
         <RevenueChart data={revenueData} loading={loading} />
         <OrdersChart data={ordersData} loading={loading} />
       </div>
+
+      {/* Conversion Funnel */}
+      <ConversionFunnel />
+
+      {/* Trend Performance */}
+      <TrendPerformance />
 
       {/* Top Products */}
       <TopProducts products={topProducts} loading={loading} />

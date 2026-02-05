@@ -31,11 +31,21 @@ const config: Config = {
       animation: {
         'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'slide-up': 'slideUp 0.3s ease-out',
+        'slideInUp': 'slideInUp 0.4s ease-out',
+        'shimmer': 'shimmer 2s linear infinite',
       },
       keyframes: {
         slideUp: {
           '0%': { transform: 'translateY(100%)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        slideInUp: {
+          '0%': { transform: 'translateY(20px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
         }
       }
     },

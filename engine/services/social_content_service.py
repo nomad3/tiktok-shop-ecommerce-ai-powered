@@ -15,6 +15,7 @@ class InstagramPost:
     hashtags: List[str]
     suggested_image_style: str
     best_posting_time: str
+    engagement_strategy: List[str] = None
 
 
 @dataclass
@@ -24,6 +25,8 @@ class TikTokCaption:
     hashtags: List[str]
     trending_sounds: List[str]
     video_ideas: List[str]
+    engagement_hooks: List[str] = None
+    viral_elements: List[str] = None
 
 
 @dataclass
@@ -62,9 +65,11 @@ class SocialContentService:
         key_features: List[str],
         style: str = "lifestyle",
         include_hashtags: bool = True,
-        hashtag_count: int = 20
+        hashtag_count: int = 20,
+        target_audience: str = "millennials",
+        trend_context: str = ""
     ) -> InstagramPost:
-        """Generate an Instagram post for a product."""
+        """Generate an Instagram post for a product with trend integration."""
         if not self.api_key:
             return self._generate_fallback_instagram(product_name, key_features, style, hashtag_count)
 
@@ -72,24 +77,37 @@ class SocialContentService:
             import anthropic
             client = anthropic.Anthropic(api_key=self.api_key)
 
-            prompt = f"""Create an engaging Instagram post for this product:
+            trend_note = f"\nTrend Context: {trend_context}" if trend_context else ""
+
+            prompt = f"""Create a highly engaging Instagram post for this trending product:
 
 Product: {product_name}
 Key Features: {', '.join(key_features)}
 Style: {style}
+Target Audience: {target_audience}
+{trend_note}
 
-Guidelines:
-- Start with a hook that stops the scroll
-- Use emojis strategically (3-5 total)
-- Include a clear call to action
-- Write in {style} tone
-- Keep caption under 2200 characters
+Advanced Guidelines:
+- Open with a scroll-stopping hook (question, bold statement, or surprising fact)
+- Use psychological triggers: scarcity, social proof, FOMO
+- Include storytelling elements - paint a picture of transformation
+- Strategic emoji use (3-5 total) that enhance, don't clutter
+- Create urgency without being salesy
+- End with a compelling CTA that feels natural
+- Write in {style} tone but make it feel authentic and conversational
+- Keep under 2000 characters for optimal engagement
+
+Hook Examples:
+- "POV: You finally found the [product category] that actually works..."
+- "This [price range] find has 50K+ people obsessed (here's why)"
+- "Plot twist: The viral [product] everyone's talking about is actually..."
 
 Return in this exact format:
-CAPTION: [your engaging caption here]
-HASHTAGS: [comma-separated list of {hashtag_count} relevant hashtags without # symbol]
-IMAGE_STYLE: [brief description of ideal image style]
-BEST_TIME: [suggested posting time like "7-9 PM EST"]"""
+CAPTION: [your engaging caption with hook, story, and CTA]
+HASHTAGS: [comma-separated list of {hashtag_count} trending + niche hashtags without # symbol]
+IMAGE_STYLE: [specific visual style suggestion with composition details]
+BEST_TIME: [optimal posting time for {target_audience} audience]
+ENGAGEMENT_STRATEGY: [2-3 tactics to boost engagement like "Ask followers to share their experience" or "Create a poll in stories"]"""
 
             message = client.messages.create(
                 model="claude-sonnet-4-20250514",
@@ -108,9 +126,11 @@ BEST_TIME: [suggested posting time like "7-9 PM EST"]"""
         self,
         product_name: str,
         hook: str,
-        include_trending_sounds: bool = True
+        include_trending_sounds: bool = True,
+        trend_hashtag: str = "",
+        target_demo: str = "gen_z"
     ) -> TikTokCaption:
-        """Generate a TikTok caption for a product."""
+        """Generate a viral TikTok caption optimized for the algorithm."""
         if not self.api_key:
             return self._generate_fallback_tiktok(product_name, hook)
 
@@ -118,23 +138,41 @@ BEST_TIME: [suggested posting time like "7-9 PM EST"]"""
             import anthropic
             client = anthropic.Anthropic(api_key=self.api_key)
 
-            prompt = f"""Create a TikTok caption for this product:
+            trend_note = f"\nTrending Hashtag: #{trend_hashtag}" if trend_hashtag else ""
+
+            prompt = f"""Create a viral TikTok caption optimized for maximum engagement:
 
 Product: {product_name}
-Video hook: {hook}
+Video Hook: {hook}
+Target Demo: {target_demo}
+{trend_note}
 
-Guidelines:
-- Keep caption short and punchy (under 150 characters)
-- Use trending language/slang naturally
-- Include 3-5 hashtags max
-- Make it feel authentic, not salesy
-- Think about what would make someone watch to the end
+TikTok Viral Formula:
+- Use current slang/trending phrases authentically
+- Create curiosity gaps that make people watch to the end
+- Include relatable scenarios that spark comments
+- Use psychological triggers (FOMO, social proof, controversy)
+- Keep it under 120 characters for mobile optimization
+- Make it screenshot-worthy or quotable
+
+{target_demo.title()} Language Patterns:
+- Gen Z: "POV", "no cap", "it's giving...", "the way I...", "not me...", "tell me why"
+- Millennial: "obsessed", "lowkey/highkey", "the fact that...", "this hit different"
+- Gen Alpha: "skibidi", "rizz", "no cap", "fr fr", "W/L", "ohio"
+
+Algorithm Optimization:
+- Use question format to drive comments
+- Include trend participation cues
+- Create shareable moments
+- Hook viewers in first 3 seconds
 
 Return in this exact format:
-CAPTION: [your caption here]
-HASHTAGS: [comma-separated list of 4-5 hashtags without # symbol]
-SOUNDS: [comma-separated list of 3 trending TikTok sound suggestions]
-VIDEO_IDEAS: [3 video concept ideas, separated by |]"""
+CAPTION: [viral-optimized caption with current slang]
+HASHTAGS: [4-5 mix of trending + niche hashtags without # symbol]
+SOUNDS: [3 currently viral TikTok sounds with engagement potential]
+VIDEO_IDEAS: [3 high-engagement video concepts separated by |]
+ENGAGEMENT_HOOKS: [3 comment-driving questions or CTAs]
+VIRAL_ELEMENTS: [2-3 specific viral triggers used (scarcity/FOMO/controversy/etc)]"""
 
             message = client.messages.create(
                 model="claude-sonnet-4-20250514",
@@ -367,6 +405,7 @@ KEYWORDS: [comma-separated SEO keywords]"""
         hashtags = []
         image_style = "Product lifestyle shot"
         best_time = "6-9 PM EST"
+        engagement_strategy = []
 
         for line in lines:
             if line.startswith("CAPTION:"):
@@ -377,12 +416,16 @@ KEYWORDS: [comma-separated SEO keywords]"""
                 image_style = line.replace("IMAGE_STYLE:", "").strip()
             elif line.startswith("BEST_TIME:"):
                 best_time = line.replace("BEST_TIME:", "").strip()
+            elif line.startswith("ENGAGEMENT_STRATEGY:"):
+                strategy_text = line.replace("ENGAGEMENT_STRATEGY:", "").strip()
+                engagement_strategy = [s.strip() for s in strategy_text.split(",")]
 
         return InstagramPost(
-            caption=caption or f"Check out our amazing {product_name}! Link in bio.",
+            caption=caption or f"✨ Just discovered {product_name} and I'm obsessed! The way this completely changed my routine... Link in bio to see what the hype is about! 💫",
             hashtags=hashtags or self.get_trending_hashtags("instagram", "default", 20),
             suggested_image_style=image_style,
-            best_posting_time=best_time
+            best_posting_time=best_time,
+            engagement_strategy=engagement_strategy or ["Ask followers to tag someone who needs this", "Create a poll in stories about their current routine"]
         )
 
     def _parse_tiktok_response(self, text: str, product_name: str, hook: str) -> TikTokCaption:
@@ -392,6 +435,8 @@ KEYWORDS: [comma-separated SEO keywords]"""
         hashtags = []
         sounds = []
         video_ideas = []
+        engagement_hooks = []
+        viral_elements = []
 
         for line in lines:
             if line.startswith("CAPTION:"):
@@ -402,16 +447,28 @@ KEYWORDS: [comma-separated SEO keywords]"""
                 sounds = [s.strip() for s in line.replace("SOUNDS:", "").split(",")]
             elif line.startswith("VIDEO_IDEAS:"):
                 video_ideas = [v.strip() for v in line.replace("VIDEO_IDEAS:", "").split("|")]
+            elif line.startswith("ENGAGEMENT_HOOKS:"):
+                hooks_text = line.replace("ENGAGEMENT_HOOKS:", "").strip()
+                engagement_hooks = [h.strip() for h in hooks_text.split(",")]
+            elif line.startswith("VIRAL_ELEMENTS:"):
+                elements_text = line.replace("VIRAL_ELEMENTS:", "").strip()
+                viral_elements = [e.strip() for e in elements_text.split(",")]
 
         return TikTokCaption(
-            caption=caption or f"{hook} Check link in bio!",
+            caption=caption or f"POV: You found the {product_name} everyone's obsessed with 👀 no cap this hits different",
             hashtags=hashtags or self.get_trending_hashtags("tiktok", "default", 5),
-            trending_sounds=sounds or ["original sound", "trending audio", "viral sound"],
+            trending_sounds=sounds or ["original sound", "viral song trending", "aesthetic audio"],
             video_ideas=video_ideas or [
                 f"POV: You discover {product_name}",
-                f"Things TikTok made me buy - {product_name} edition",
-                f"Review: Is {product_name} worth it?"
-            ]
+                f"This {product_name} is lowkey viral for a reason",
+                f"Rating viral TikTok products: {product_name} edition"
+            ],
+            engagement_hooks=engagement_hooks or [
+                "Drop a 🔥 if you need this",
+                "Tell me you want this without telling me you want this",
+                "Who else is adding this to cart rn?"
+            ],
+            viral_elements=viral_elements or ["FOMO", "Social proof", "Curiosity gap"]
         )
 
     def _parse_facebook_response(self, text: str, product_name: str) -> FacebookPost:

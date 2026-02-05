@@ -1,7 +1,9 @@
 import { BuyButton } from "@/components/ui/BuyButton";
 import { ViewTracker } from "@/components/ui/ViewTracker";
+import { CountdownTimer } from "@/components/ui/CountdownTimer";
+import { SocialProof } from "@/components/ui/SocialProof";
 import { getProduct } from "@/lib/api";
-import { ArrowLeft, ShieldCheck, Star, Truck, Zap, Package, RotateCcw, Clock } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Star, Truck, Zap, Package, RotateCcw, Clock, TrendingUp, Eye } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -28,9 +30,19 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <ArrowLeft size={20} />
             <span className="hidden sm:inline font-medium">Back to Shop</span>
           </Link>
-          <div className="bg-tiktok-red/10 border border-tiktok-red/20 px-4 py-1.5 rounded-full text-sm font-bold text-tiktok-red flex items-center gap-2">
-            <Zap size={14} className="animate-pulse" />
-            Trending Now
+          <div className="flex items-center gap-2">
+            <div className="bg-tiktok-red/10 border border-tiktok-red/20 px-4 py-1.5 rounded-full text-sm font-bold text-tiktok-red flex items-center gap-2">
+              <Zap size={14} className="animate-pulse" />
+              Trending Now
+            </div>
+            <div className="bg-purple-500/10 border border-purple-500/20 px-3 py-1.5 rounded-full text-xs font-medium text-purple-300 flex items-center gap-1">
+              <TrendingUp size={12} />
+              #{Math.floor(product.trend_score / 10)} on TikTok
+            </div>
+            <div className="bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-full text-xs font-medium text-blue-300 flex items-center gap-1">
+              <Eye size={12} />
+              {Math.floor(product.trend_score * 1000)}+ views
+            </div>
           </div>
         </div>
       </header>
@@ -92,28 +104,25 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </div>
             </div>
 
-            {/* Social Proof */}
-            <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/10">
-              <div className="flex items-center gap-2">
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
-                </div>
-                <span className="text-white font-medium">4.9</span>
-              </div>
-              <span className="text-gray-400">({Math.floor(product.trend_score * 5)} reviews)</span>
-              <span className="text-gray-600">|</span>
-              <span className="text-gray-400">{Math.floor(product.urgency_score * 1.5)}+ sold</span>
+            {/* Enhanced Social Proof */}
+            <div className="mb-6">
+              <SocialProof 
+                productId={product.id}
+                productName={product.name}
+                viewCount={Math.floor(product.trend_score * 100)}
+                purchaseCount={Math.floor(product.urgency_score * 1.5)}
+                rating={4.8}
+                reviewCount={Math.floor(product.trend_score * 5)}
+              />
             </div>
 
-            {/* Urgency Box */}
-            <div className="bg-gradient-to-r from-tiktok-red/10 to-orange-500/10 border border-tiktok-red/20 rounded-xl p-4 mb-6 flex items-center gap-4">
-              <div className="bg-tiktok-red/20 p-3 rounded-full">
-                <Zap size={24} className="text-tiktok-red" />
-              </div>
-              <div>
-                <p className="text-base font-bold text-white">Low Stock Alert</p>
-                <p className="text-sm text-gray-400">Only {Math.floor(product.urgency_score / 5)} units left at this price!</p>
-              </div>
+            {/* Enhanced Countdown Timer */}
+            <div className="mb-6">
+              <CountdownTimer 
+                urgencyLevel={product.urgency_score > 70 ? "high" : product.urgency_score > 40 ? "medium" : "low"}
+                title="Limited time offer ends in"
+                showSeconds={product.urgency_score > 70}
+              />
             </div>
 
             {/* Description */}
